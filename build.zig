@@ -14,6 +14,37 @@ const zcc = @import("compile_commands");
 
 const include_dirs = &[_][]const u8{
     "src/",
+    "include/",
+};
+
+const src_subdirs = &[_][]const u8{
+    "atomic",
+    "audio",
+    "cpuinfo",
+    "dynapi",
+    "events",
+    "file",
+    "filesystem",
+    "libm",
+    "loadso",
+    "locale",
+    "main",
+    "misc",
+    "render",
+    "sensor",
+    "stdlib",
+    "test",
+    "thread",
+    "timer",
+    "video",
+};
+
+const src_subdirs_os_specific = &[_][]const u8{
+    "power",
+    "core",
+    "haptic",
+    "hidapi",
+    "joystick",
 };
 
 pub fn build(b: *std.Build) !void {
@@ -30,8 +61,11 @@ pub fn build(b: *std.Build) !void {
     var sources = std.ArrayList([]const u8).init(b.allocator);
     defer sources.deinit();
 
-    {
-        var dir = try std.fs.cwd().openIterableDir("src/", .{});
+    for (src_subdirs) |subdir| {
+        const subdir_path = b.pathJoin(&.{ "./src", subdir });
+        defer b.allocator.free(subdir_path);
+        std.log.debug("trying to open {s}", .{subdir_path});
+        var dir = try std.fs.cwd().openIterableDir(subdir_path, .{});
         var walker = try dir.walk(b.allocator);
         defer walker.deinit();
         while (try walker.next()) |item| {
